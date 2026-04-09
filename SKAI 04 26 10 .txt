@@ -51019,12 +51019,17 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
 
-    // [EXTRA-READY-GATE] For non-daily extra-ball lotteries, do not save until extras
-    // are confirmed populated.  After all population attempts above (r.extraNumbers,
-    // FPS fallback, live-global fallback) extras should be present.  If they are still
-    // empty, the extra ML run has not yet written its results -- poll every 2 s for up
-    // to 5 minutes before proceeding.  Mirrors the main-number readiness check above.
-    if (!_bfIsDaily && window.SKAI_META && window.SKAI_META.hasExtraBall && !_extraNums.length) {
+    // [EXTRA-READY-GATE] For ANY lottery that has an extra ball (daily or regular),
+    // do not save until the extra numbers are confirmed populated.
+    // • Non-daily lotteries: extra readiness = _extraNums was populated above.
+    // • Daily lotteries:     extra readiness = r.dailyExtraDigits (bonus digits)
+    //                        was written by the daily extra ML run.
+    // If extras are still absent, poll every 2 s for up to 5 minutes, then
+    // proceed anyway so the save attempt is never lost.
+    var _bfExtraReady = _bfIsDaily
+      ? !!(r.dailyExtraDigits && r.dailyExtraDigits.length)
+      : (_extraNums.length > 0);
+    if (window.SKAI_META && window.SKAI_META.hasExtraBall && !_bfExtraReady) {
       r._bfExtraPollTick = (r._bfExtraPollTick || 0) + 1;
       if (r._bfExtraPollTick <= 150) { // 150 x 2 s = 5 min
         setBatchSaveStatus('Waiting for extra numbers to complete... (' + (r._bfExtraPollTick * 2) + 's)');
