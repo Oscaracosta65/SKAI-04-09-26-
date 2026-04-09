@@ -50992,6 +50992,31 @@ document.addEventListener('DOMContentLoaded', function () {
         var _fps0x = (r.finalPredictionSets[0] && r.finalPredictionSets[0].extra) ? r.finalPredictionSets[0].extra : [];
         _extraNums = normalizeNumericArray(_fps0x).slice(0, 5);
       }
+      // [FIX-BUG-A] Live-global fallback for extra-ball lotteries.
+      // _snapExtraNums is captured at skai:score:done time, before SKAI_runExtra
+      // completes. If r.extraNumbers is still empty here, mirror skaiPrepareAiSave
+      // and read the live globals that SKAI_runExtra wrote before skai:extra:done.
+      if (!_extraNums.length && window.SKAI_META && window.SKAI_META.hasExtraBall) {
+        var _bfLiveExtra = window.__SKAI_LAST_EXTRA__ || window.SKAI_LAST_EXTRA || window.skaiSaveExtraOrdered || [];
+        if (_bfLiveExtra && _bfLiveExtra.length) {
+          _extraNums = normalizeNumericArray(_bfLiveExtra).slice(0, 5);
+        }
+        if (!_extraNums.length && window.SKAI_TOP_EXTRA && window.SKAI_TOP_EXTRA.length) {
+          var _bfTopX = [];
+          for (var _bfti = 0; _bfti < window.SKAI_TOP_EXTRA.length && _bfTopX.length < 5; _bfti++) {
+            if (window.SKAI_TOP_EXTRA[_bfti] && window.SKAI_TOP_EXTRA[_bfti].num != null) {
+              _bfTopX.push(window.SKAI_TOP_EXTRA[_bfti].num);
+            }
+          }
+          if (_bfTopX.length) { _extraNums = normalizeNumericArray(_bfTopX).slice(0, 5); }
+        }
+      }
+      // [FIX-BUG-B] No-extra-ball lottery must never carry an extra.
+      // Mirrors skaiPrepareAiSave which explicitly zeros extras when hasExtraBall
+      // is false. Prevents stale snapshot or FPS data from bleeding in.
+      if (window.SKAI_META && !window.SKAI_META.hasExtraBall) {
+        _extraNums = [];
+      }
     }
 
     // 2. Build numbers_json payload
