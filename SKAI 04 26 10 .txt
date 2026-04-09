@@ -140,39 +140,39 @@ $skaiEngineStatusConfig = array(
     'collapsedDefault'     => true,
     'autoHideResolved'     => false,
     'title'                => 'SKAI Engine Status',
-    'intro'                => 'SKAI is live and fully functional across regular lotteries. Daily lotteries are also fully functional, though they remain under enhanced observation while final validation continues. We do not expect errors. However, if you notice anything unusual, please report it. Thank you very much.',
+    'intro'                => 'Single-run predictions are fully operational across both regular and daily lotteries. Your results, saves, and MyLottoExpert dashboard are working exactly as designed. We have proactively suspended the 9-combo batch feature while engineering investigates a display inconsistency in the batch results grid. This has no effect on any single-run prediction or previously saved data. We will restore the batch feature as soon as the investigation is resolved.',
     'lastUpdated'          => '',
-    'footer'               => 'SKAI is operating normally for regular lotteries. Daily lotteries are active and fully usable, with continued monitoring in place as a final quality assurance measure.',
+    'footer'               => 'All prediction results, saves, and dashboard data are fully intact. The 9-combo batch run has been temporarily suspended pending resolution of a display issue. Single-run predictions for both regular and daily lotteries are unaffected and operating as expected.',
     'noIssuesMessage'      => 'All monitored SKAI systems are currently operating normally.',
     'summary' => array(
         array(
             'label'    => 'Regular Lotteries',
-            'status'   => 'Operational',
-            'state'    => 'green',
-            'headline' => 'Fully functional and performing as expected.',
-            'detail'   => 'Regular lottery engines are active, stable, and operating normally.'
+            'status'   => 'Under Active Review',
+            'state'    => 'amber',
+            'headline' => 'Single-run predictions fully operational. 9-combo batch temporarily suspended.',
+            'detail'   => 'All regular lottery predictions, saves, and dashboard data are working exactly as designed. The 9-combo batch run has been proactively paused while a display inconsistency in the batch results grid is under investigation. No prediction data is affected.'
         ),
         array(
             'label'    => 'Daily Lotteries',
             'status'   => 'Operational with Monitoring',
             'state'    => 'amber',
             'headline' => 'Fully functional with additional validation oversight.',
-            'detail'   => 'Daily lottery support is live and usable. We remain cautious only because final validation is still being observed closely for edge-case consistency.'
+            'detail'   => 'Daily lottery predictions are live and accurate. This category remains under enhanced observation as a final quality assurance measure while edge-case consistency is confirmed across all display scenarios.'
         ),
     ),
     'issues' => array(
         array(
             'enabled'  => true,
-            'title'    => 'Regular Lottery Coverage',
-            'body'     => 'SKAI is working as expected for regular lotteries and is currently considered stable for normal use.',
-            'note'     => 'No known blocking issues are expected in this category.',
-            'severity' => 'info'
+            'title'    => '9-Combo Batch Run: Temporarily Suspended',
+            'body'     => 'We have proactively disabled the 9-combo batch feature while engineering investigates a display inconsistency in the batch results grid. Single-run predictions, all saves, and your complete dashboard history are fully unaffected. The batch feature will be restored as soon as the investigation is resolved.',
+            'note'     => 'This is a precautionary suspension only. No prediction data, saved picks, or user data has been impacted.',
+            'severity' => 'warning'
         ),
         array(
             'enabled'  => true,
             'title'    => 'Daily Lottery Coverage',
-            'body'     => 'Daily lotteries are fully functional. This category remains under additional observation only to confirm full consistency across all display and edge-case scenarios.',
-            'note'     => 'There should not be any errors. However, if you notice anything unexpected, please report it so it can be reviewed quickly.',
+            'body'     => 'Daily lottery predictions are fully functional and accurate. This category remains under additional observation to confirm complete consistency across all display and edge-case scenarios before final sign-off.',
+            'note'     => 'No errors are expected. If you notice anything unexpected, please report it so it can be reviewed promptly.',
             'severity' => 'warning'
         )
     )
@@ -18321,9 +18321,13 @@ $escDrawDate = htmlspecialchars($formattedDrawDate, ENT_QUOTES, 'UTF-8');
 <!-- SKAI: Run 9-Combo Default Batch -->
 <div style="margin:10px 0 4px 0;">
   <button type="button" id="skai-batch-launch" class="btn-outline"
-    style="display:inline-block;font-size:0.9rem;padding:7px 14px;">
+    style="display:inline-block;font-size:0.9rem;padding:7px 14px;opacity:0.45;cursor:not-allowed;"
+    disabled aria-disabled="true">
     Run 9-Combo Default Batch
   </button>
+  <div style="margin-top:8px;padding:10px 14px;border-radius:10px;background:#fffbeb;border:1px solid #fde68a;font-size:0.85rem;line-height:1.6;color:#92400e;">
+    <strong>Temporarily unavailable.</strong> The 9-combo batch run is paused while engineering investigates a display inconsistency in the results grid. Single-run predictions, all saved picks, and your MyLottoExpert dashboard are fully operational and unaffected. We will restore this feature as soon as the investigation is resolved.
+  </div>
 </div>
 
 <!-- SKAI: Batch confirmation modal -->
