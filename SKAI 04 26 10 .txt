@@ -8514,6 +8514,23 @@ try {
             ) {
                 $lotRow = $cfg['lotteries'][$selectedGameId];
                 $dbCol  = (string) ($lotRow['dbCol'] ?? '');
+                // Pre-extract extra-ball config for the save handler.
+                // $lotteryConfig is always [] at save time (loaded later at line ~10556).
+                // Reading it here from the already-open JSON avoids a second file read.
+                $__saveLotCfgRow = (isset($lotRow['lotteryConfig']) && is_array($lotRow['lotteryConfig']))
+                    ? $lotRow['lotteryConfig'] : $lotRow;
+                $__saveHasExtra = !empty($__saveLotCfgRow['has_extra_ball'])
+                    || !empty($__saveLotCfgRow['hasExtraBall'])
+                    || !empty($__saveLotCfgRow['extra_ball_max'])
+                    || !empty($__saveLotCfgRow['max_extra_ball_number'])
+                    || !empty($__saveLotCfgRow['num_extra_balls_drawn'])
+                    || !empty($__saveLotCfgRow['extra_ball_count']);
+                $__saveExtraMax = (int)(
+                    $__saveLotCfgRow['extra_ball_max']
+                    ?? $__saveLotCfgRow['max_extra_ball_number']
+                    ?? $__saveLotCfgRow['extraBallMax']
+                    ?? 0
+                );
             }
         }
 
@@ -9148,9 +9165,17 @@ $labelInput = implode(' - ', $parts);
         $pickSize = (int) ($lotteryConfig['lotteryConfig']['pickSize'] ?? $lotteryConfig['pickSize'] ?? 0);
         $mainMax  = (int) ($lotteryConfig['lotteryConfig']['mainNumbersMax'] ?? $lotteryConfig['mainNumbersMax'] ?? 0);
         $mainMin  = (int) ($lotteryConfig['lotteryConfig']['mainNumbersMin'] ?? $lotteryConfig['mainNumbersMin'] ?? 1);
-        $extraMax = (int) ($lotteryConfig['lotteryConfig']['extraNumbersMax'] ?? $lotteryConfig['extraNumbersMax'] ?? 0);
+        // $lotteryConfig is always [] at save time (loaded after the save handler).
+        // Use $__saveHasExtra / $__saveExtraMax extracted from the master JSON in the
+        // pre-save meta block above when available; fall back to $lotteryConfig otherwise.
+        $__extraCfgKnown = isset($__saveHasExtra);
+        $extraMax = $__extraCfgKnown
+            ? (int)($__saveExtraMax ?? 0)
+            : (int)($lotteryConfig['lotteryConfig']['extraNumbersMax'] ?? $lotteryConfig['extraNumbersMax'] ?? 0);
         $extraMin = (int) ($lotteryConfig['lotteryConfig']['extraNumbersMin'] ?? $lotteryConfig['extraNumbersMin'] ?? 1);
-        $hasExtraCfg = !empty($lotteryConfig['hasExtraBall']) || !empty($lotteryConfig['lotteryConfig']['hasExtraBall']);
+        $hasExtraCfg = $__extraCfgKnown
+            ? (bool)$__saveHasExtra
+            : (!empty($lotteryConfig['hasExtraBall']) || !empty($lotteryConfig['lotteryConfig']['hasExtraBall']));
 
         // Determine if this save is a SKAI pool-style prediction (top 20/5),
         // which should not be forced to match pickSize or the 2-extra limit.
@@ -9208,14 +9233,16 @@ $labelInput = implode(' - ', $parts);
                 goto SKAI_SAVE_DONE;
             }
         } else {
-            // [FIX-EXTRAS-DROP] Drop extras only for non-SKAI, non-daily saves on games that
-            // truly have no extra ball.  Do NOT drop for SKAI pool saves ($isSkaiPool=true):
-            // $lotteryConfig is always [] at save time so $hasExtraCfg/$extraMax are always
-            // 0/false, but the posted extras are valid (Powerball top-5 Powerballs, Euromillions
-            // Lucky Stars).  Do NOT drop for daily games: extras are bonus digits, not config
-            // extra balls.  Without this guard, every SKAI AI save silently loses all extras.
-            if (!$isSkaiPool && !$isDailyGamePosted && (!$hasExtraCfg || $extraMax <= 0)) {
-                $extraArr = [];
+            // Drop extras for any save on games confirmed to have no extra ball.
+            // When game config is known ($__extraCfgKnown=true, loaded from master JSON above),
+            // apply the drop to ALL save types including SKAI pool saves, because we have a
+            // reliable source of truth.  When config is unknown (file read failed), keep the
+            // original SKAI pool save guard: posted extras may still be valid even though
+            // $lotteryConfig is empty at save time.
+            if (!$isDailyGamePosted && !$hasExtraCfg) {
+                if (!empty($__extraCfgKnown) || !$isSkaiPool) {
+                    $extraArr = [];
+                }
             }
         }
 
